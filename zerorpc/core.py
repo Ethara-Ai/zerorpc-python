@@ -73,53 +73,24 @@ class ServerBase(object):
 
     @staticmethod
     def _filter_methods(cls, self, methods):
-        if isinstance(methods, dict):
-            return methods
-        server_methods = set(k for k in dir(cls) if not k.startswith('_'))
-        return dict((k, getattr(methods, k))
-                    for k in dir(methods)
-                    if callable(getattr(methods, k)) and
-                    not k.startswith('_') and k not in server_methods
-                    )
+        pass
 
     @staticmethod
     def _extract_name(methods):
-        return getattr(methods, '__name__', None) \
-            or getattr(type(methods), '__name__', None) \
-            or repr(methods)
+        pass
 
     def close(self):
         self.stop()
         self._multiplexer.close()
 
     def _format_args_spec(self, args_spec, r=None):
-        if args_spec:
-            r = [dict(name=name) for name in args_spec[0]]
-            default_values = args_spec[3]
-            if default_values is not None:
-                for arg, def_val in zip(reversed(r), reversed(default_values)):
-                    arg['default'] = def_val
-        return r
+        pass
 
     def _zerorpc_inspect(self):
-        methods = dict((m, f) for m, f in iteritems(self._methods)
-                    if not m.startswith('_'))
-        detailled_methods = dict((m,
-            dict(args=self._format_args_spec(f._zerorpc_args()),
-                doc=f._zerorpc_doc())) for (m, f) in iteritems(methods))
-        return {'name': self._name,
-                'methods': detailled_methods}
+        pass
 
     def _inject_builtins(self):
-        self._methods['_zerorpc_list'] = lambda: [m for m in self._methods
-                if not m.startswith('_')]
-        self._methods['_zerorpc_name'] = lambda: self._name
-        self._methods['_zerorpc_ping'] = lambda: ['pong', self._name]
-        self._methods['_zerorpc_help'] = lambda m: \
-            self._methods[m]._zerorpc_doc()
-        self._methods['_zerorpc_args'] = \
-            lambda m: self._methods[m]._zerorpc_args()
-        self._methods['_zerorpc_inspect'] = self._zerorpc_inspect
+        pass
 
     def __call__(self, method, *args):
         if method not in self._methods:
@@ -127,56 +98,16 @@ class ServerBase(object):
         return self._methods[method](*args)
 
     def _print_traceback(self, protocol_v1, exc_infos):
-        logger.exception('')
-
-        exc_type, exc_value, exc_traceback = exc_infos
-        if protocol_v1:
-            return (repr(exc_value),)
-        human_traceback = traceback.format_exc()
-        name = exc_type.__name__
-        human_msg = str(exc_value)
-        return (name, human_msg, human_traceback)
+        pass
 
     def _async_task(self, initial_event):
-        protocol_v1 = initial_event.header.get(u'v', 1) < 2
-        channel = self._multiplexer.channel(initial_event)
-        hbchan = HeartBeatOnChannel(channel, freq=self._heartbeat_freq,
-                passive=protocol_v1)
-        bufchan = BufferedChannel(hbchan)
-        exc_infos = None
-        event = bufchan.recv()
-        try:
-            self._context.hook_load_task_context(event.header)
-            functor = self._methods.get(event.name, None)
-            if functor is None:
-                raise NameError(event.name)
-            functor.pattern.process_call(self._context, bufchan, event, functor)
-        except LostRemote:
-            exc_infos = list(sys.exc_info())
-            self._print_traceback(protocol_v1, exc_infos)
-        except Exception:
-            exc_infos = list(sys.exc_info())
-            human_exc_infos = self._print_traceback(protocol_v1, exc_infos)
-            reply_event = bufchan.new_event(u'ERR', human_exc_infos,
-                    self._context.hook_get_task_context())
-            self._context.hook_server_inspect_exception(event, reply_event, exc_infos)
-            bufchan.emit_event(reply_event)
-        finally:
-            del exc_infos
-            bufchan.close()
+        pass
 
     def _acceptor(self):
-        while True:
-            initial_event = self._multiplexer.recv()
-            self._task_pool.spawn(self._async_task, initial_event)
+        pass
 
     def run(self):
-        self._acceptor_task = gevent.spawn(self._acceptor)
-        try:
-            self._acceptor_task.get()
-        finally:
-            self.stop()
-            self._task_pool.join(raise_error=True)
+        pass
 
     def stop(self):
         if self._acceptor_task is not None:
@@ -199,43 +130,13 @@ class ClientBase(object):
         self._multiplexer.close()
 
     def _handle_remote_error(self, event):
-        exception = self._context.hook_client_handle_remote_error(event)
-        if not exception:
-            if event.header.get(u'v', 1) >= 2:
-                (name, msg, traceback) = event.args
-                exception = RemoteError(name, msg, traceback)
-            else:
-                (msg,) = event.args
-                exception = RemoteError('RemoteError', msg, None)
-
-        return exception
+        pass
 
     def _select_pattern(self, event):
-        for pattern in self._context.hook_client_patterns_list(
-                patterns.patterns_list):
-            if pattern.accept_answer(event):
-                return pattern
-        return None
+        pass
 
     def _process_response(self, request_event, bufchan, timeout):
-        def raise_error(ex):
-            bufchan.close()
-            self._context.hook_client_after_request(request_event, None, ex)
-            raise ex
-
-        try:
-            reply_event = bufchan.recv(timeout=timeout)
-        except TimeoutExpired:
-            raise_error(TimeoutExpired(timeout,
-                    'calling remote method {0}'.format(request_event.name)))
-
-        pattern = self._select_pattern(reply_event)
-        if pattern is None:
-            raise_error(RuntimeError(
-                'Unable to find a pattern for: {0}'.format(request_event)))
-
-        return pattern.process_answer(self._context, bufchan, request_event,
-                reply_event, self._handle_remote_error)
+        pass
 
     def __call__(self, method, *args, **kargs):
         # here `method` is either a string of bytes or an unicode string in
@@ -348,31 +249,10 @@ class Puller(SocketBase):
         return self._methods[method](*args)
 
     def _receiver(self):
-        while True:
-            event = self._events.recv()
-            try:
-                if event.name not in self._methods:
-                    raise NameError(event.name)
-                self._context.hook_load_task_context(event.header)
-                self._context.hook_server_before_exec(event)
-                self._methods[event.name](*event.args)
-                # In Push/Pull their is no reply to send, hence None for the
-                # reply_event argument
-                self._context.hook_server_after_exec(event, None)
-            except Exception:
-                exc_infos = sys.exc_info()
-                try:
-                    logger.exception('')
-                    self._context.hook_server_inspect_exception(event, None, exc_infos)
-                finally:
-                    del exc_infos
+        pass
 
     def run(self):
-        self._receiver_task = gevent.spawn(self._receiver)
-        try:
-            self._receiver_task.get()
-        finally:
-            self._receiver_task = None
+        pass
 
     def stop(self):
         if self._receiver_task is not None:
@@ -425,10 +305,4 @@ def fork_task_context(functor, context=None):
         The simple rule to know if a task need to be wrapped is:
             - if the new task will make any zerorpc call, it should be wrapped.
     '''
-    context = context or Context.get_instance()
-    xheader = context.hook_get_task_context()
-
-    def wrapped(*args, **kargs):
-        context.hook_load_task_context(xheader)
-        return functor(*args, **kargs)
-    return wrapped
+    pass

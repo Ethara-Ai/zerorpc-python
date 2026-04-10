@@ -58,76 +58,56 @@ class Context(zmq.Context):
 
     @property
     def _middlewares(self):
-        return self.__dict__['_middlewares']
+        pass
 
     @_middlewares.setter
     def _middlewares(self, value):
-        self.__dict__['_middlewares'] = value
+        pass
 
     @property
     def _hooks(self):
-        return self.__dict__['_hooks']
+        pass
 
     @_hooks.setter
     def _hooks(self, value):
-        self.__dict__['_hooks'] = value
+        pass
 
     @property
     def _msg_id_base(self):
-        return self.__dict__['_msg_id_base']
+        pass
 
     @_msg_id_base.setter
     def _msg_id_base(self, value):
-        self.__dict__['_msg_id_base'] = value
+        pass
 
     @property
     def _msg_id_counter(self):
-        return self.__dict__['_msg_id_counter']
+        pass
 
     @_msg_id_counter.setter
     def _msg_id_counter(self, value):
-        self.__dict__['_msg_id_counter'] = value
+        pass
 
     @property
     def _msg_id_counter_stop(self):
-        return self.__dict__['_msg_id_counter_stop']
+        pass
 
     @_msg_id_counter_stop.setter
     def _msg_id_counter_stop(self, value):
-        self.__dict__['_msg_id_counter_stop'] = value
+        pass
 
     @staticmethod
     def get_instance():
-        if Context._instance is None:
-            Context._instance = Context()
-        return Context._instance
+        pass
 
     def _reset_msgid(self):
-        self._msg_id_base = tobytes(uuid.uuid4().hex)[8:]
-        self._msg_id_counter = random.randrange(0, 2 ** 32)
-        self._msg_id_counter_stop = random.randrange(self._msg_id_counter, 2 ** 32)
+        pass
 
     def new_msgid(self):
-        if self._msg_id_counter >= self._msg_id_counter_stop:
-            self._reset_msgid()
-        else:
-            self._msg_id_counter = (self._msg_id_counter + 1)
-        return tobytes('{0:08x}'.format(self._msg_id_counter)) + self._msg_id_base
+        pass
 
     def register_middleware(self, middleware_instance):
-        registered_count = 0
-        self._middlewares.append(middleware_instance)
-        for hook in self._hooks:
-            functor = getattr(middleware_instance, hook, None)
-            if functor is None:
-                try:
-                    functor = middleware_instance.get(hook, None)
-                except AttributeError:
-                    pass
-            if functor is not None:
-                self._hooks[hook].append(functor)
-                registered_count += 1
-        return registered_count
+        pass
 
     #
     # client/server
@@ -138,23 +118,17 @@ class Context(zmq.Context):
         return endpoint
 
     def hook_load_task_context(self, event_header):
-        for functor in self._hooks['load_task_context']:
-            functor(event_header)
+        pass
 
     def hook_get_task_context(self):
-        event_header = {}
-        for functor in self._hooks['get_task_context']:
-            event_header.update(functor())
-        return event_header
+        pass
 
     #
     # Server-side hooks
     #
     def hook_server_before_exec(self, request_event):
         """Called when a method is about to be executed on the server."""
-
-        for functor in self._hooks['server_before_exec']:
-            functor(request_event)
+        pass
 
     def hook_server_after_exec(self, request_event, reply_event):
         """Called when a method has been executed successfully.
@@ -167,8 +141,7 @@ class Context(zmq.Context):
         The reply_event argument will be None if the Push/Pull pattern is used.
 
         """
-        for functor in self._hooks['server_after_exec']:
-            functor(request_event, reply_event)
+        pass
 
     def hook_server_inspect_exception(self, request_event, reply_event, exc_infos):
         """Called when a method raised an exception.
@@ -176,20 +149,13 @@ class Context(zmq.Context):
         The reply_event argument will be None if the Push/Pull pattern is used.
 
         """
-        task_context = self.hook_get_task_context()
-        for functor in self._hooks['server_inspect_exception']:
-            functor(request_event, reply_event, task_context, exc_infos)
+        pass
 
     #
     # Client-side hooks
     #
     def hook_client_handle_remote_error(self, event):
-        exception = None
-        for functor in self._hooks['client_handle_remote_error']:
-            ret = functor(event)
-            if ret:
-                exception = ret
-        return exception
+        pass
 
     def hook_client_before_request(self, event):
         """Called when the Client is about to send a request.
@@ -197,8 +163,7 @@ class Context(zmq.Context):
         You can see it as the counterpart of ``hook_server_before_exec``.
 
         """
-        for functor in self._hooks['client_before_request']:
-            functor(event)
+        pass
 
     def hook_client_after_request(self, request_event, reply_event, exception=None):
         """Called when an answer or a timeout has been received from the server.
@@ -219,10 +184,7 @@ class Context(zmq.Context):
         ``TimeoutExpired`` object and reply_event will be None.
 
         """
-        for functor in self._hooks['client_after_request']:
-            functor(request_event, reply_event, exception)
+        pass
 
     def hook_client_patterns_list(self, patterns):
-        for functor in self._hooks['client_patterns_list']:
-            patterns = functor(patterns)
-        return patterns
+        pass

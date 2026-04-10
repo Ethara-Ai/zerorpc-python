@@ -128,8 +128,7 @@ class Sender(SequentialSender):
             self._send_task.kill()
 
     def _sender(self):
-        for parts in self._send_queue:
-            super(Sender, self)._send(parts)
+        pass
 
     def __call__(self, parts, timeout=None):
         try:
@@ -151,9 +150,7 @@ class Receiver(SequentialReceiver):
         self._recv_queue = None
 
     def _recver(self):
-        while True:
-            parts = super(Receiver, self)._recv()
-            self._recv_queue.put(parts)
+        pass
 
     def __call__(self, timeout=None):
         try:
@@ -181,27 +178,27 @@ class Event(object):
 
     @property
     def header(self):
-        return self._header
+        pass
 
     @property
     def name(self):
-        return self._name
+        pass
 
     @name.setter
     def name(self, v):
-        self._name = v
+        pass
 
     @property
     def args(self):
-        return self._args
+        pass
 
     @property
     def identity(self):
-        return self._identity
+        pass
 
     @identity.setter
     def identity(self, v):
-        self._identity = v
+        pass
 
     def pack(self):
         payload = (self._header, self._name, self._args)
@@ -265,11 +262,11 @@ class Events(ChannelBase):
 
     @property
     def recv_is_supported(self):
-        return self._recv is not None
+        pass
 
     @property
     def emit_is_supported(self):
-        return self._send is not None
+        pass
 
     def __del__(self):
         try:
@@ -320,18 +317,10 @@ class Events(ChannelBase):
         return r
 
     def bind(self, endpoint, resolve=True):
-        r = []
-        for endpoint_ in self._resolve_endpoint(endpoint, resolve):
-            r.append(self._socket.bind(endpoint_))
-            logger.debug('bound to %s (status=%s)', endpoint_, r[-1])
-        return r
+        pass
 
     def disconnect(self, endpoint, resolve=True):
-        r = []
-        for endpoint_ in self._resolve_endpoint(endpoint, resolve):
-            r.append(self._socket.disconnect(endpoint_))
-            logger.debug('disconnected from %s (status=%s)', endpoint_, r[-1])
-        return r
+        pass
 
     def new_event(self, name, args, xheader=None):
         event = Event(name, args, context=self._context)
@@ -369,8 +358,8 @@ class Events(ChannelBase):
         return event
 
     def setsockopt(self, *args):
-        return self._socket.setsockopt(*args)
+        pass
 
     @property
     def context(self):
-        return self._context
+        pass

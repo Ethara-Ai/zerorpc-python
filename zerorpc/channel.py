@@ -49,11 +49,11 @@ class ChannelMultiplexer(ChannelBase):
 
     @property
     def recv_is_supported(self):
-        return self._events.recv_is_supported
+        pass
 
     @property
     def emit_is_supported(self):
-        return self._events.emit_is_supported
+        pass
 
     def close(self):
         if self._channel_dispatcher_task:
@@ -73,42 +73,18 @@ class ChannelMultiplexer(ChannelBase):
         return event
 
     def _channel_dispatcher(self):
-        while True:
-            try:
-                event = self._events.recv()
-            except Exception:
-                logger.exception('zerorpc.ChannelMultiplexer ignoring error on recv')
-                continue
-            channel_id = event.header.get(u'response_to', None)
-
-            queue = None
-            if channel_id is not None:
-                channel = self._active_channels.get(channel_id, None)
-                if channel is not None:
-                    queue = channel._queue
-            elif self._broadcast_queue is not None:
-                queue = self._broadcast_queue
-
-            if queue is None:
-                logger.warning('zerorpc.ChannelMultiplexer,'
-                        ' unable to route event: {0}'.format(
-                            event.__str__(ignore_args=True)))
-            else:
-                queue.put(event)
+        pass
 
     def channel(self, from_event=None):
-        if self._channel_dispatcher_task is None:
-            self._channel_dispatcher_task = gevent.spawn(
-                self._channel_dispatcher)
-        return Channel(self, from_event)
+        pass
 
     @property
     def active_channels(self):
-        return self._active_channels
+        pass
 
     @property
     def context(self):
-        return self._events.context
+        pass
 
 
 class Channel(ChannelBase):
@@ -127,11 +103,11 @@ class Channel(ChannelBase):
 
     @property
     def recv_is_supported(self):
-        return self._multiplexer.recv_is_supported
+        pass
 
     @property
     def emit_is_supported(self):
-        return self._multiplexer.emit_is_supported
+        pass
 
     def close(self):
         if self._channel_id is not None:
@@ -162,7 +138,7 @@ class Channel(ChannelBase):
 
     @property
     def context(self):
-        return self._multiplexer.context
+        pass
 
 
 class BufferedChannel(ChannelBase):
@@ -180,19 +156,19 @@ class BufferedChannel(ChannelBase):
 
     @property
     def recv_is_supported(self):
-        return self._channel.recv_is_supported
+        pass
 
     @property
     def emit_is_supported(self):
-        return self._channel.emit_is_supported
+        pass
 
     @property
     def on_close_if(self):
-        return self._on_close_if
+        pass
 
     @on_close_if.setter
     def on_close_if(self, cb):
-        self._on_close_if = cb
+        pass
 
     def close(self):
         if self._recv_task is not None:
@@ -203,24 +179,7 @@ class BufferedChannel(ChannelBase):
             self._channel = None
 
     def _recver(self):
-        while True:
-            event = self._channel.recv()
-            if event.name == u'_zpc_more':
-                try:
-                    self._remote_queue_open_slots += int(event.args[0])
-                except Exception:
-                    logger.exception('gevent_zerorpc.BufferedChannel._recver')
-                if self._remote_queue_open_slots > 0:
-                    self._remote_can_recv.set()
-            elif self._input_queue.qsize() == self._input_queue_size:
-                raise RuntimeError(
-                    'BufferedChannel, queue overflow on event:', event)
-            else:
-                self._input_queue.put(event)
-                if self._on_close_if is not None and self._on_close_if(event):
-                    self._recv_task = None
-                    self.close()
-                    return
+        pass
 
     def new_event(self, name, args, xheader=None):
         return self._channel.new_event(name, args, xheader)
@@ -261,8 +220,8 @@ class BufferedChannel(ChannelBase):
 
     @property
     def channel(self):
-        return self._channel
+        pass
 
     @property
     def context(self):
-        return self._channel.context
+        pass

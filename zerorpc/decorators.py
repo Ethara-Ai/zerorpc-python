@@ -44,22 +44,10 @@ class DecoratorBase(object):
         return self._functor(*args, **kargs)
 
     def _zerorpc_doc(self):
-        if self.__doc__ is None:
-            return None
-        return inspect.cleandoc(self.__doc__)
+        pass
 
     def _zerorpc_args(self):
-        try:
-            args_spec = self._functor._zerorpc_args()
-        except AttributeError:
-            try:
-                args_spec = inspect.getargspec(self._functor)
-            except TypeError:
-                try:
-                    args_spec = inspect.getargspec(self._functor.__call__)
-                except (AttributeError, TypeError):
-                    args_spec = None
-        return args_spec
+        pass
 
 
 class rep(DecoratorBase):

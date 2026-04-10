@@ -96,227 +96,37 @@ parser.add_argument('params', nargs='*',
 
 
 def setup_links(args, socket):
-    if args.bind:
-        for endpoint in args.bind:
-            print('binding to "{0}"'.format(endpoint), file=sys.stderr)
-            socket.bind(endpoint)
-    addresses = []
-    if args.address:
-        addresses.append(args.address)
-    if args.connect:
-        addresses.extend(args.connect)
-    for endpoint in addresses:
-        print('connecting to "{0}"'.format(endpoint), file=sys.stderr)
-        socket.connect(endpoint)
+    pass
 
 
 def run_server(args):
-    server_obj_path = args.command
-
-    sys.path.insert(0, os.getcwd())
-    if '.' in server_obj_path:
-        modulepath, objname = server_obj_path.rsplit('.', 1)
-        module = __import__(modulepath, fromlist=[objname])
-        server_obj = getattr(module, objname)
-    else:
-        server_obj = __import__(server_obj_path)
-
-    if callable(server_obj):
-        server_obj = server_obj()
-
-    server = zerorpc.Server(server_obj, heartbeat=args.heartbeat, pool_size=args.pool_size)
-    if args.debug:
-        server.debug = True
-    setup_links(args, server)
-    print('serving "{0}"'.format(server_obj_path), file=sys.stderr)
-    return server.run()
+    pass
 
 
 # this function does a really intricate job to keep backward compatibility
 # with a previous version of zerorpc, and lazily retrieving results if possible
 def zerorpc_inspect_legacy(client, filter_method, long_doc, include_argspec):
-    if filter_method is None:
-        remote_methods = client._zerorpc_list()
-    else:
-        remote_methods = [filter_method]
-
-    def remote_detailled_methods():
-        for name in remote_methods:
-            if include_argspec:
-                argspec = client._zerorpc_args(name)
-            else:
-                argspec = None
-            docstring = client._zerorpc_help(name)
-            if docstring and not long_doc:
-                docstring = docstring.split('\n', 1)[0]
-            yield (name, argspec, docstring if docstring else '<undocumented>')
-
-    if not include_argspec:
-        longest_name_len = max(len(name) for name in remote_methods)
-        return (longest_name_len, ((name, doc) for name, argspec, doc in
-            remote_detailled_methods()))
-
-    r = [(name + (inspect.formatargspec(*argspec)
-                  if argspec else '(...)'), doc)
-         for name, argspec, doc in remote_detailled_methods()]
-    longest_name_len = max(len(name) for name, doc in r) if r else 0
-    return (longest_name_len, r)
+    pass
 
 
 # handle the 'python formatted' _zerorpc_inspect, that return the output of
 # "getargspec" from the python lib "inspect". A monstruosity from protocol v2.
 def zerorpc_inspect_python_argspecs(remote_methods, filter_method, long_doc, include_argspec):
-    def format_method(name, argspec, doc):
-        if include_argspec:
-            name += (inspect.formatargspec(*argspec) if argspec else
-                '(...)')
-        if not doc:
-            doc = '<undocumented>'
-        elif not long_doc:
-            doc = doc.splitlines()[0]
-        return (name, doc)
-    r = [format_method(*methods_info) for methods_info in remote_methods if
-         filter_method is None or methods_info[0] == filter_method]
-    if not r:
-        return None
-    longest_name_len = max(len(name) for name, doc in r) if r else 0
-    return (longest_name_len, r)
+    pass
 
 
 # Handles generically formatted arguments (not tied to any specific programming language).
 def zerorpc_inspect_generic(remote_methods, filter_method, long_doc, include_argspec):
-    def format_method(name, args, doc):
-        if include_argspec:
-            def format_arg(arg):
-                def_val = arg.get('default')
-                if def_val is None:
-                    return arg['name']
-                return '{0}={1}'.format(arg['name'], def_val)
-
-            if args:
-                name += '({0})'.format(', '.join(map(format_arg, args)))
-            else:
-                name += '(??)'
-
-        if not doc:
-            doc = '<undocumented>'
-        elif not long_doc:
-            doc = doc.splitlines()[0]
-        return (name, doc)
-
-    methods = [format_method(name, details['args'], details['doc'])
-            for name, details in remote_methods.items()
-            if filter_method is None or name == filter_method]
-
-    longest_name_len = (max(len(name) for name, doc in methods)
-            if methods else 0)
-    return (longest_name_len, methods)
+    pass
 
 
 def zerorpc_inspect(client, method=None, long_doc=True, include_argspec=True):
-    try:
-        inspect_result = client._zerorpc_inspect()
-        remote_methods = inspect_result['methods']
-        legacy = False
-    except (zerorpc.RemoteError, NameError):
-        legacy = True
-
-    if legacy:
-        try:
-            service_name = client._zerorpc_name()
-        except (zerorpc.RemoteError):
-            service_name = 'N/A'
-
-        (longest_name_len, detailled_methods) = zerorpc_inspect_legacy(client,
-                method, long_doc, include_argspec)
-    else:
-        service_name = inspect_result.get('name', 'N/A')
-        if not isinstance(remote_methods, dict):
-            (longest_name_len,
-                detailled_methods) = zerorpc_inspect_python_argspecs(
-                remote_methods, method, long_doc, include_argspec)
-
-        (longest_name_len, detailled_methods) = zerorpc_inspect_generic(
-            remote_methods, method, long_doc, include_argspec)
-
-    return longest_name_len, detailled_methods, service_name
+    pass
 
 
 def run_client(args):
-    client = zerorpc.Client(timeout=args.timeout, heartbeat=args.heartbeat,
-            passive_heartbeat=not args.active_hb)
-    if args.debug:
-        client.debug = True
-    setup_links(args, client)
-    if not args.command:
-        (longest_name_len, detailled_methods, service) = zerorpc_inspect(client,
-                long_doc=False, include_argspec=args.inspect)
-        print('[{0}]'.format(service))
-        if args.inspect:
-            for (name, doc) in detailled_methods:
-                print(name)
-        else:
-            for (name, doc) in detailled_methods:
-                print('{0} {1}'.format(name.ljust(longest_name_len), doc))
-        return
-    if args.inspect:
-        (longest_name_len, detailled_methods, service) = zerorpc_inspect(client,
-                method=args.command)
-        if detailled_methods:
-            (name, doc) = detailled_methods[0]
-            print('[{0}]\n{1}\n\n{2}\n'.format(service, name, doc))
-        else:
-            print('[{0}]\nNo documentation for "{1}".'.format(service, args.command))
-        return
-    if args.json:
-        call_args = [json.loads(x) for x in args.params]
-    else:
-        call_args = args.params
-    results = client(args.command, *call_args)
-    if not isinstance(results, Iterator):
-        if args.print_json:
-            json.dump(results, sys.stdout)
-        else:
-            pprint(results)
-    else:
-        # streaming responses
-        if args.print_json:
-            first = True
-            sys.stdout.write('[')
-            for result in results:
-                if first:
-                    first = False
-                else:
-                    sys.stdout.write(',')
-                json.dump(result, sys.stdout)
-            sys.stdout.write(']')
-        else:
-            for result in results:
-                pprint(result)
+    pass
 
 
 def main():
-    logging.basicConfig()
-    args = parser.parse_args()
-
-    if args.debug:
-        logging.getLogger().setLevel(logging.DEBUG)
-
-    if args.bind or args.connect:
-        if args.command:
-            args.params.insert(0, args.command)
-        args.command = args.address
-        args.address = None
-
-    if not (args.bind or args.connect or args.address):
-        parser.print_help()
-        return -1
-
-    if args.client:
-        return run_client(args)
-
-    if not args.command:
-        parser.print_help()
-        return -1
-
-    return run_server(args)
+    pass

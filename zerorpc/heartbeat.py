@@ -52,11 +52,11 @@ class HeartBeatOnChannel(ChannelBase):
 
     @property
     def recv_is_supported(self):
-        return self._channel.recv_is_supported
+        pass
 
     @property
     def emit_is_supported(self):
-        return self._channel.emit_is_supported
+        pass
 
     def close(self):
         self._closed = True
@@ -71,35 +71,13 @@ class HeartBeatOnChannel(ChannelBase):
             self._channel = None
 
     def _heartbeat(self):
-        while True:
-            gevent.sleep(self._heartbeat_freq)
-            if self._remote_last_hb is None:
-                self._remote_last_hb = time.time()
-            if time.time() > self._remote_last_hb + self._heartbeat_freq * 2:
-                self._lost_remote = True
-                if not self._closed:
-                    gevent.kill(self._parent_coroutine,
-                            self._lost_remote_exception())
-                break
-            self._channel.emit(u'_zpc_hb', (0,))  # 0 -> compat with protocol v2
+        pass
 
     def _start_heartbeat(self):
-        if self._heartbeat_task is None and self._heartbeat_freq is not None and not self._closed:
-            self._heartbeat_task = gevent.spawn(self._heartbeat)
+        pass
 
     def _recver(self):
-        while True:
-            event = self._channel.recv()
-            if self._compat_v2 is None:
-                self._compat_v2 = event.header.get(u'v', 0) < 3
-            if event.name == u'_zpc_hb':
-                self._remote_last_hb = time.time()
-                self._start_heartbeat()
-                if self._compat_v2:
-                    event.name = u'_zpc_more'
-                    self._input_queue.put(event)
-            else:
-                self._input_queue.put(event)
+        pass
 
     def _lost_remote_exception(self):
         return LostRemote('Lost remote after {0}s heartbeat'.format(
@@ -125,8 +103,8 @@ class HeartBeatOnChannel(ChannelBase):
 
     @property
     def channel(self):
-        return self._channel
+        pass
 
     @property
     def context(self):
-        return self._channel.context
+        pass
